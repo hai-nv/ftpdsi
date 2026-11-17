@@ -154,7 +154,13 @@ int fakepoll(struct pollfd *fds, int nfds, int timeout) {
 
 #define POLL_UNKNOWN    (~(POLLIN|POLLPRI|POLLOUT))
 
-#ifndef __SWITCH__
+#ifdef _NDS
+/* DS/DSi: small buffers, the heap is shared with lwIP and dswifi */
+#define XFER_BUFFERSIZE 16384
+#define SOCK_BUFFERSIZE 16384
+#define FILE_BUFFERSIZE 8192
+#define CMD_BUFFERSIZE  2048
+#elif !defined(__SWITCH__)
 #define XFER_BUFFERSIZE 32768
 #define SOCK_BUFFERSIZE 32768
 #define FILE_BUFFERSIZE 65536
@@ -1102,6 +1108,11 @@ ftp_session_transfer(ftp_session_t *session)
   do
   {
     rc = session->transfer(session);
+#ifdef _NDS
+    /* lwIP/dswifi run in a cothread: let it run between chunks */
+    if(rc == 0)
+      cothread_yield();
+#endif
   } while(rc == 0);
 }
 
