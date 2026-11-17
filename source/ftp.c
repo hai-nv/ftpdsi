@@ -27,6 +27,7 @@
 #define lstat stat
 #elif defined(_NDS)
 #include <nds.h>
+#include <strings.h>
 #include <dswifi9.h>
 #define INET_ADDRSTRLEN 16
 #define gethostid() Wifi_GetIP()
@@ -2111,10 +2112,69 @@ ftp_init(void)
   console_print(GREEN "Running in %s\n" RESET, isDSiMode() ? "DSi mode" : "DS mode");
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
-  int ret = Wifi_InitDefault(WFC_CONNECT | WIFI_ATTEMPT_DSI_MODE);
-  if(!ret)
+  int ret = 1;
+  if(!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE))
   {
-    console_print(RED "Wifi_InitDefault: error (assoc status %d)\n" RESET, (int)Wifi_AssocStatus());
+    console_print(RED "Wifi_InitDefault: error\n" RESET);
+    return -1;
+  }
+
+  /* Prefer the network saved by TwilightBoxart (/_nds/TwilightBoxart.ini: ssid=, key=). */
+  char nds_ssid[33] = "", nds_key[65] = "";
+  if(fatInitDefault())
+  {
+    FILE *cfg = fopen("/_nds/TwilightBoxart.ini", "r");
+    if(cfg)
+    {
+      char ln[160];
+      while(fgets(ln, sizeof(ln), cfg))
+      {
+        size_t n = strlen(ln);
+        while(n > 0 && (ln[n-1] == '\n' || ln[n-1] == '\r')) ln[--n] = 0;
+        char *eq = strchr(ln, '=');
+        if(!eq) continue;
+        *eq++ = 0;
+        if(strcasecmp(ln, "ssid") == 0) { strncpy(nds_ssid, eq, 32); nds_ssid[32] = 0; }
+        else if(strcasecmp(ln, "key") == 0) { strncpy(nds_key, eq, 64); nds_key[64] = 0; }
+      }
+      fclose(cfg);
+    }
+  }
+
+  int wifi_ok = 0, last_status = -1, dhcp = 0;
+  for(int attempt = 0; attempt < 2 && !wifi_ok; attempt++)
+  {
+    int limit = 30 * 60;
+    if(attempt == 0 && nds_ssid[0])
+    {
+      console_print(GREEN "Joining \"%s\"...\n" RESET, nds_ssid);
+      Wifi_AccessPoint ap;
+      memset(&ap, 0, sizeof(ap));
+      ap.ssid_len = strlen(nds_ssid);
+      memcpy(ap.ssid, nds_ssid, ap.ssid_len);
+      size_t kl = strlen(nds_key);
+      if(Wifi_ConnectSecureAP(&ap, kl ? nds_key : NULL, kl) != 0) continue;
+    }
+    else if(attempt == 1 || !nds_ssid[0])
+    {
+      console_print(GREEN "Using the Wi-Fi saved in the DSi...\n" RESET);
+      Wifi_AutoConnect();
+      limit = 15 * 60;
+    }
+    for(int f = 0; f < limit; f++)
+    {
+      cothread_yield_irq(IRQ_VBLANK);
+      last_status = Wifi_AssocStatus();
+      if(last_status == ASSOCSTATUS_ACQUIRINGDHCP && !dhcp) { dhcp = 1; console_print(GREEN "Associated, asking for IP...\n" RESET); if(limit < 60*60) limit = 60*60; }
+      if(last_status == ASSOCSTATUS_ASSOCIATED) { wifi_ok = 1; break; }
+      if(last_status == ASSOCSTATUS_CANNOTCONNECT) break;
+    }
+    if(!wifi_ok) { Wifi_DisconnectAP(); for(int f = 0; f < 180; f++) cothread_yield_irq(IRQ_VBLANK); }
+    if(!nds_ssid[0]) break;
+  }
+  if(!wifi_ok)
+  {
+    console_print(RED "Wi-Fi: error (assoc status %d)\n" RESET, last_status);
     return -1;
   }
 
