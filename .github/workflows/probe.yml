@@ -1,0 +1,19 @@
+﻿name: probe-blocksds
+on:
+  push:
+    branches: [blocksds-port]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    container: skylyrac/blocksds:slim-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect SDK
+        run: |
+          echo "BLOCKSDS=$BLOCKSDS"
+          ls $BLOCKSDS/sys/arm7/main_core || true
+          ls $BLOCKSDS/sys/default_makefiles || true
+          ls $BLOCKSDS/examples/dswifi 2>/dev/null || find / -type d -name dswifi -path '*examples*' 2>/dev/null | head
+          for d in $(find / -type d -path '*examples/dswifi/*' -maxdepth 8 2>/dev/null | head -3); do echo "== $d"; ls $d; cat $d/Makefile 2>/dev/null | head -60; done
+          grep -rn "DSI\|dsi" $BLOCKSDS/sys/default_makefiles/rom_arm9only/Makefile | head -20 || true
