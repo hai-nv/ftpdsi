@@ -45,10 +45,19 @@
 #endif
 #include "console.h"
 
-#ifndef LACKS_POLL
+#if !defined(LACKS_POLL) && !defined(_NDS)
 #include <poll.h>
 #else
 #include <sys/select.h>
+/* dswifi's own poll() is unreliable here: use a select()-based one under other names */
+#undef POLLIN
+#undef POLLOUT
+#undef POLLPRI
+#undef POLLERR
+#undef POLLHUP
+#undef POLLNVAL
+#define pollfd ftpd_pollfd
+#define nfds_t ftpd_nfds_t
 #define POLLIN 1
 #define POLLOUT 2
 #define POLLPRI 4
