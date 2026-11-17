@@ -24,7 +24,7 @@ jobs:
         run: |
           NT=$BLOCKSDS/tools/ndstool/ndstool
           A7=$BLOCKSDS/sys/arm7/main_core/arm7_dswifi.elf
-          $NT -c ftpdsi.nds -7 $A7 -9 build/arm9.elf -b meta/icon32.bmp "FTP Server;DS or DSi;hai-nv" -uc 2
+          $NT -c ftpdsi.nds -7 $A7 -9 build/arm9.elf -b meta/icon32.bmp "FTP Server;DS or DSi" -uc 2
           ls -l ftpdsi*.nds
       - uses: actions/upload-artifact@v4
         with:
