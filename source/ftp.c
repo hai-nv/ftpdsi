@@ -35,7 +35,7 @@
 #define lstat stat
 /* ftpd requires a blocking close() operation with this few sockets */
 /* fortunately, there is one in dswifi - just not directly exposed */
-extern int forceclosesocket(int socket);
+#define forceclosesocket(s) close(s)
 #elif defined(__SWITCH__)
 #include <switch.h>
 #define lstat stat
