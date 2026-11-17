@@ -2108,12 +2108,13 @@ ftp_init(void)
     goto soc_fail;
   }
 #elif defined(_NDS)
+  console_print(GREEN "Running in %s\n" RESET, isDSiMode() ? "DSi mode" : "DS mode");
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
   int ret = Wifi_InitDefault(WFC_CONNECT);
   if(!ret)
   {
-    console_print(RED "Wifi_InitDefault: error\n" RESET);
+    console_print(RED "Wifi_InitDefault: error (assoc status %d)\n" RESET, (int)Wifi_AssocStatus());
     return -1;
   }
 

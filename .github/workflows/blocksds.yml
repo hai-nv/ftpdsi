@@ -22,12 +22,12 @@ jobs:
           test -f build/arm9.elf
       - name: Pack NDS
         run: |
-          $BLOCKSDS/tools/ndstool/ndstool -c ftpdsi.nds \
-            -7 $BLOCKSDS/sys/arm7/main_core/arm7_dswifi.elf -9 build/arm9.elf \
-            -b meta/icon32.bmp "FTP Server;DSi (BlocksDS port);hai-nv" \
-            -uc 2
-          ls -l ftpdsi.nds
+          NT=$BLOCKSDS/tools/ndstool/ndstool
+          A7=$BLOCKSDS/sys/arm7/main_core/arm7_dswifi.elf
+          $NT -c ftpdsi.nds -7 $A7 -9 build/arm9.elf -b meta/icon32.bmp "FTP Server;DS or DSi;hai-nv" -uc 2
+          $NT -c ftpdsi_dsi_only.nds -7 $A7 -9 build/arm9.elf -b meta/icon32.bmp "FTP Server;DSi only;hai-nv" -uc 3
+          ls -l ftpdsi*.nds
       - uses: actions/upload-artifact@v4
         with:
           name: ftpdsi
-          path: ftpdsi.nds
+          path: ftpdsi*.nds
