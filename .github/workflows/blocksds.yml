@@ -1,0 +1,32 @@
+﻿name: build-ftpdsi-blocksds
+on:
+  push:
+    branches: [blocksds-port]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: skylyrac/blocksds:slim-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ARM9
+        run: |
+          M=$BLOCKSDS/sys/default_makefiles/rom_arm9arm7
+          mkdir -p build
+          make -f $M/Makefile.arm9 \
+            SOURCEDIRS=source INCLUDEDIRS=include \
+            DEFINES='-D_NDS -DSTATUS_STRING=\"ftpd-dsi\"' \
+            LIBS='-ldswifi9 -lnds9' \
+            LIBDIRS="$BLOCKSDS/libs/dswifi $BLOCKSDS/libs/libnds" 2>&1 | tail -80
+          test -f build/arm9.elf
+      - name: Pack NDS
+        run: |
+          $BLOCKSDS/tools/ndstool/ndstool -c ftpdsi.nds \
+            -7 $BLOCKSDS/sys/arm7/main_core/arm7_dswifi.elf -9 build/arm9.elf \
+            -b meta/icon32.bmp "FTP Server;DSi (BlocksDS port);hai-nv" \
+            -uc 2
+          ls -l ftpdsi.nds
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ftpdsi
+          path: ftpdsi.nds
