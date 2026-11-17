@@ -12,7 +12,5 @@ jobs:
       - name: Inspect SDK
         run: |
           M=$BLOCKSDS/sys/default_makefiles/rom_arm9arm7
-          ls -R $M | head -20
-          echo ---- ROOT MAKEFILE; cat $M/Makefile | head -150
-          echo ---- grep dsi; grep -rniE "dsi|ndstool|-d " $M | head -30
-          echo ---- templates; ls $BLOCKSDS/templates 2>/dev/null | head; ls $BLOCKSDS/../ 2>/dev/null | head
+          echo "=====ARM9"; sed -n 1,95p $M/Makefile.arm9
+          echo "=====NDSTOOL"; $BLOCKSDS/tools/ndstool/ndstool 2>&1 | grep -iE "unit|dsi|-u |-z|-g " | head -20
