@@ -13,12 +13,7 @@ jobs:
         run: |
           M=$BLOCKSDS/sys/default_makefiles/rom_arm9arm7
           mkdir -p build
-          echo ====A; sed -n 95,170p $M/Makefile.arm9; echo ====B
-          export LIBDIRS="$BLOCKSDS/libs/dswifi"
-          make -f $M/Makefile.arm9 \
-            SOURCEDIRS=source INCLUDEDIRS=include \
-            DEFINES='-D_NDS -DSTATUS_STRING=\"ftpd-dsi\"' \
-            LIBS='-ldswifi9 -lnds9' 2>&1 | tail -60
+          export SOURCEDIRS=source INCLUDEDIRS=include LIBS="-ldswifi9 -lnds9"`n          export DEFINES="-D_NDS -DSTATUS_STRING=\\\"ftpd-dsi\\\""`n          export LIBDIRS="$BLOCKSDS/libs/dswifi"`n          make -f $M/Makefile.arm9 2>&1 | tail -60
           test -f build/arm9.elf
       - name: Pack NDS
         run: |
