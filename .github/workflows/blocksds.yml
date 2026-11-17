@@ -13,6 +13,7 @@ jobs:
         run: |
           M=$BLOCKSDS/sys/default_makefiles/rom_arm9arm7
           mkdir -p build
+          echo ====A; sed -n 95,170p $M/Makefile.arm9; echo ====B
           export LIBDIRS="$BLOCKSDS/libs/dswifi"
           make -f $M/Makefile.arm9 \
             SOURCEDIRS=source INCLUDEDIRS=include \
