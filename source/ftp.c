@@ -29,6 +29,9 @@
 #include <nds.h>
 #include <strings.h>
 #include <fat.h>
+#if defined(_NDS) && O_NONBLOCK != 0x4000
+#error "dswifi-patched ABI mismatch: O_NONBLOCK differs from the 1.22.2 archive"
+#endif
 #include <dswifi9.h>
 #define INET_ADDRSTRLEN 16
 #define gethostid() Wifi_GetIP()
