@@ -28,6 +28,7 @@
 #elif defined(_NDS)
 #include <nds.h>
 #include <strings.h>
+#include <fat.h>
 #include <dswifi9.h>
 #define INET_ADDRSTRLEN 16
 #define gethostid() Wifi_GetIP()
@@ -2112,7 +2113,6 @@ ftp_init(void)
   console_print(GREEN "Running in %s\n" RESET, isDSiMode() ? "DSi mode" : "DS mode");
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
-  int ret = 1;
   if(!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE))
   {
     console_print(RED "Wifi_InitDefault: error\n" RESET);
