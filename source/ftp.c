@@ -2111,7 +2111,7 @@ ftp_init(void)
   console_print(GREEN "Running in %s\n" RESET, isDSiMode() ? "DSi mode" : "DS mode");
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
-  int ret = Wifi_InitDefault(WFC_CONNECT);
+  int ret = Wifi_InitDefault(WFC_CONNECT | WIFI_ATTEMPT_DSI_MODE);
   if(!ret)
   {
     console_print(RED "Wifi_InitDefault: error (assoc status %d)\n" RESET, (int)Wifi_AssocStatus());

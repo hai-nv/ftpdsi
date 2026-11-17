@@ -38,7 +38,7 @@ loop(loop_status_t (*callback)(void))
 #elif defined(_NDS)
   while(1)
   {
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
     status = callback();
     console_render();
     if(status != LOOP_CONTINUE)
