@@ -1,4 +1,4 @@
-﻿name: build-ftpdsi-blocksds
+name: build-ftpdsi-blocksds
 on:
   push:
     branches: [blocksds-port]
@@ -17,7 +17,7 @@ jobs:
           export INCLUDEDIRS=include
           export LIBS="-ldswifi9 -lnds9"
           export DEFINES='-D_NDS -DSTATUS_STRING=\"ftpd-dsi\"'
-          export LIBDIRS="$BLOCKSDS/libs/dswifi"
+          export LIBDIRS="$PWD/dswifi-patched $BLOCKSDS/libs/dswifi"
           make -f $M/Makefile.arm9 2>&1 | tail -60
           test -f build/arm9.elf
       - name: Pack NDS
