@@ -1772,7 +1772,11 @@ ftp_session_poll(ftp_session_t *session)
 
   /* the first pollfd is the command socket */
   pollinfo[0].fd      = session->cmd_fd;
+#ifdef _NDS
+  pollinfo[0].events  = POLLIN; /* lwIP has no urgent data */
+#else
   pollinfo[0].events  = POLLIN | POLLPRI;
+#endif
   pollinfo[0].revents = 0;
 
   switch(session->state)
