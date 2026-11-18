@@ -2140,7 +2140,10 @@ ftp_init(void)
   console_print(GREEN "Running in %s\n" RESET, isDSiMode() ? "DSi mode" : "DS mode");
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
-  if(!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE))
+  scanKeys();
+  int ds_wifi = (keysHeld() & KEY_SELECT) ? 1 : 0;
+  console_print(GREEN "[diag] SCFG_EXT=%08X Wi-Fi mode: %s%s\n" RESET, (unsigned int)REG_SCFG_EXT, ds_wifi ? "DS (SELECT held)" : "DSi", ds_wifi ? "" : " (hold SELECT at start for DS mode)");
+  if(!Wifi_InitDefault(INIT_ONLY | (ds_wifi ? 0 : WIFI_ATTEMPT_DSI_MODE)))
   {
     console_print(RED "Wifi_InitDefault: error\n" RESET);
     return -1;
@@ -2188,10 +2191,12 @@ ftp_init(void)
       Wifi_AutoConnect();
       limit = 40 * 60;
     }
+    int prev_status = -99;
     for(int f = 0; f < limit; f++)
     {
       cothread_yield_irq(IRQ_VBLANK);
       last_status = Wifi_AssocStatus();
+      if(last_status != prev_status) { console_print(GREEN "[diag] try %d t=%ds status=%d\n" RESET, attempt + 1, f / 60, last_status); prev_status = last_status; }
       if(last_status == ASSOCSTATUS_ACQUIRINGDHCP && !dhcp) { dhcp = 1; console_print(GREEN "Associated, asking for IP...\n" RESET); if(limit < 60*60) limit = 60*60; }
       if(last_status == ASSOCSTATUS_ASSOCIATED) { wifi_ok = 1; break; }
       if(last_status == ASSOCSTATUS_CANNOTCONNECT) break;
