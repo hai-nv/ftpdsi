@@ -2169,10 +2169,10 @@ ftp_init(void)
   }
 
   int wifi_ok = 0, last_status = -1, dhcp = 0;
-  for(int attempt = 0; attempt < 2 && !wifi_ok; attempt++)
+  for(int attempt = 0; attempt < 4 && !wifi_ok; attempt++)
   {
     int limit = 30 * 60;
-    if(attempt == 0 && nds_ssid[0])
+    if((attempt % 2) == 0 && nds_ssid[0])
     {
       console_print(GREEN "Joining \"%s\"...\n" RESET, nds_ssid);
       Wifi_AccessPoint ap;
@@ -2182,7 +2182,7 @@ ftp_init(void)
       size_t kl = strlen(nds_key);
       if(Wifi_ConnectSecureAP(&ap, kl ? nds_key : NULL, kl) != 0) continue;
     }
-    else if(attempt == 1 || !nds_ssid[0])
+    else if((attempt % 2) == 1 || !nds_ssid[0])
     {
       console_print(GREEN "Using the Wi-Fi saved in the DSi...\n" RESET);
       Wifi_AutoConnect();
@@ -2197,11 +2197,11 @@ ftp_init(void)
       if(last_status == ASSOCSTATUS_CANNOTCONNECT) break;
     }
     if(!wifi_ok) { Wifi_DisconnectAP(); for(int f = 0; f < 180; f++) cothread_yield_irq(IRQ_VBLANK); }
-    if(!nds_ssid[0]) break;
+    if(!nds_ssid[0] && attempt >= 1) break;
   }
   if(!wifi_ok)
   {
-    console_print(RED "Wi-Fi: error (assoc status %d)\n" RESET, last_status);
+    console_print(RED "Wi-Fi: error (assoc status %d: %s)\n" RESET, last_status, last_status == 1 ? "network not found" : last_status == 3 ? "stuck connecting" : last_status == 6 ? "cannot connect" : "timeout");
     return -1;
   }
 
