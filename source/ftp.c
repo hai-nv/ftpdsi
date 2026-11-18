@@ -2184,9 +2184,9 @@ ftp_init(void)
     }
     else if((attempt % 2) == 1 || !nds_ssid[0])
     {
-      console_print(GREEN "Using the Wi-Fi saved in the DSi...\n" RESET);
+      console_print(GREEN "Using the Wi-Fi saved in the DSi (try %d)...\n" RESET, attempt + 1);
       Wifi_AutoConnect();
-      limit = 15 * 60;
+      limit = 40 * 60;
     }
     for(int f = 0; f < limit; f++)
     {
@@ -2197,7 +2197,7 @@ ftp_init(void)
       if(last_status == ASSOCSTATUS_CANNOTCONNECT) break;
     }
     if(!wifi_ok) { Wifi_DisconnectAP(); for(int f = 0; f < 180; f++) cothread_yield_irq(IRQ_VBLANK); }
-    if(!nds_ssid[0] && attempt >= 1) break;
+    if(!nds_ssid[0] && attempt >= 2) break;
   }
   if(!wifi_ok)
   {
