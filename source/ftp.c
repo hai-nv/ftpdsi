@@ -2201,7 +2201,25 @@ ftp_init(void)
       if(last_status == ASSOCSTATUS_ASSOCIATED) { wifi_ok = 1; break; }
       if(last_status == ASSOCSTATUS_CANNOTCONNECT) break;
     }
-    if(!wifi_ok) { Wifi_DisconnectAP(); for(int f = 0; f < 180; f++) cothread_yield_irq(IRQ_VBLANK); }
+    if(!wifi_ok)
+    {
+      /* Full software reset of the Wi-Fi stack, alternating DSi / DS mode, then retry. */
+      console_print(GREEN "[diag] resetting Wi-Fi (try %d failed, status %d)\n" RESET, attempt + 1, last_status);
+      Wifi_DisconnectAP();
+      Wifi_DisableWifi();
+      for(int f = 0; f < 60; f++) cothread_yield_irq(IRQ_VBLANK);
+      Wifi_Deinit();
+      for(int f = 0; f < 60; f++) cothread_yield_irq(IRQ_VBLANK);
+      ds_wifi = !ds_wifi;
+      console_print(GREEN "[diag] re-init in %s mode\n" RESET, ds_wifi ? "DS" : "DSi");
+      if(!Wifi_InitDefault(INIT_ONLY | (ds_wifi ? 0 : WIFI_ATTEMPT_DSI_MODE)))
+      {
+        console_print(RED "Wifi_InitDefault: error\n" RESET);
+        return -1;
+      }
+      Wifi_EnableWifi();
+      for(int f = 0; f < 60; f++) cothread_yield_irq(IRQ_VBLANK);
+    }
     if(!nds_ssid[0] && attempt >= 2) break;
   }
   if(!wifi_ok)
